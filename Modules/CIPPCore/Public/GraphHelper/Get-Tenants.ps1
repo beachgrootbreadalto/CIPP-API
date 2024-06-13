@@ -103,7 +103,7 @@ function Get-Tenants {
                     }
                 }
 
-                [PSCustomObject]@{
+                $Obj = [PSCustomObject]@{
                     PartitionKey             = 'Tenants'
                     RowKey                   = $_.Name
                     customerId               = $_.Name
@@ -123,6 +123,11 @@ function Get-Tenants {
                     RequiresRefresh          = [bool]$RequiresRefresh
                     LastRefresh              = (Get-Date).ToUniversalTime()
                 }
+                if ($Obj.defaultDomainName -eq 'Invalid' -or !$Obj.defaultDomainName) {
+                    continue
+                }
+                Add-CIPPAzDataTableEntity @TenantsTable -Entity $Obj -Force | Out-Null
+                $Obj
             }
         }
         $IncludedTenantsCache = [system.collections.generic.list[object]]::new()
@@ -133,7 +138,7 @@ function Get-Tenants {
                     RowKey            = $env:TenantID
                     PartitionKey      = 'Tenants'
                     customerId        = $env:TenantID
-                    defaultDomainName = ($Domains | Where-Object { $_.isInitial -eq $true }).id
+                    defaultDomainName = ($Domains | Where-Object { $_.isDefault -eq $true }).id
                     initialDomainName = ($Domains | Where-Object { $_.isInitial -eq $true }).id
                     displayName       = '*Partner Tenant'
                     domains           = 'PartnerTenant'
@@ -145,6 +150,7 @@ function Get-Tenants {
                     RequiresRefresh   = [bool]$RequiresRefresh
                     LastRefresh       = (Get-Date).ToUniversalTime()
                 }) | Out-Null
+
         }
         foreach ($Tenant in $TenantList) {
             if ($Tenant.defaultDomainName -eq 'Invalid' -or !$Tenant.defaultDomainName) {
