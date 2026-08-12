@@ -14,12 +14,22 @@ env:
 
 jobs:
   deploy:
-    runs-on: windows-latest
-    
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write #This is required for requesting the JWT
+      contents: read #This is required for actions/checkout
+
     steps:
       - name: 'Checkout GitHub Action'
         uses: actions/checkout@v4
       
+      - name: Login to Azure
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_E78D5FD363D94D8D995982E161129FCE }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_4B4A61F1F37E4CDFA9CE6C319E8C7FA5 }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_BC813C41EC1B44088BC1D4ED130B92D4 }}
+
       - name: 'Run Azure Functions Action'
         uses: Azure/functions-action@v1
         id: fa
@@ -27,4 +37,4 @@ jobs:
           app-name: 'cippmemie-auditlog'
           slot-name: 'Production'
           package: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_D8BF355F52364EC2BD47C66CFF95637F }}
+          
